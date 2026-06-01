@@ -1481,7 +1481,7 @@ const generateSettlement = async (req, res) => {
 
     // Get driver info
     const [drivers] = await pool.execute(
-      'SELECT id, name, user_id_code, pay_mode FROM drivers WHERE id = ?',
+      'SELECT id, name, user_id_code, pay_mode, gst_number FROM drivers WHERE id = ?',
       [driverId]
     );
 
@@ -1532,7 +1532,8 @@ const generateSettlement = async (req, res) => {
           id: driver.id,
           name: driver.name,
           user_id_code: driver.user_id_code,
-          pay_mode: driver.pay_mode
+          pay_mode: driver.pay_mode,
+          gst_number: driver.gst_number
         },
         startDate,
         endDate,
@@ -1580,7 +1581,7 @@ const downloadSettlement = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Driver ID, start date, and end date are required' });
     }
 
-    const [drivers] = await pool.execute('SELECT name, user_id_code, pay_mode FROM drivers WHERE id = ?', [driverId]);
+    const [drivers] = await pool.execute('SELECT name, user_id_code, pay_mode, gst_number FROM drivers WHERE id = ?', [driverId]);
     if (drivers.length === 0) {
       console.error(`[Settlement Download] Driver not found: id=${driverId}`);
       return res.status(404).json({ success: false, message: 'Driver not found' });
@@ -1622,6 +1623,7 @@ const downloadSettlement = async (req, res) => {
     const { pdfBytes, filename } = await generateSettlementPDF({
       driverName: driver.name,
       userIdCode: driver.user_id_code,
+      driverGstNumber: driver.gst_number,
       startDate,
       endDate,
       tickets: processedTickets,
@@ -1668,7 +1670,7 @@ const sendSettlementEmailHandler = async (req, res) => {
     }
 
     const [drivers] = await pool.execute(
-      'SELECT d.name, d.user_id_code, d.pay_mode, u.email as user_email FROM drivers d JOIN users u ON d.user_id = u.id WHERE d.id = ?',
+      'SELECT d.name, d.user_id_code, d.pay_mode, d.gst_number, u.email as user_email FROM drivers d JOIN users u ON d.user_id = u.id WHERE d.id = ?',
       [driverId]
     );
     if (drivers.length === 0) return res.status(404).json({ success: false, message: 'Driver not found' });
@@ -1706,6 +1708,7 @@ const sendSettlementEmailHandler = async (req, res) => {
     const { pdfBytes, filename } = await generateSettlementPDF({
       driverName: driver.name,
       userIdCode: driver.user_id_code,
+      driverGstNumber: driver.gst_number,
       startDate,
       endDate,
       tickets: processedTickets,

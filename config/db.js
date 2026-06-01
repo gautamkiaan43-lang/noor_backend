@@ -23,8 +23,28 @@ const pool = mysql.createPool({
 
 // Test the connection
 pool.getConnection()
-  .then(connection => {
+  .then(async (connection) => {
     console.log('✅ Database connected successfully');
+    
+    // Automatically fix decimal issue on startup
+    try {
+      console.log('Running automatic decimal fix for tickets table...');
+      await connection.query(`
+        ALTER TABLE tickets 
+        MODIFY quantity DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+        MODIFY pay_quantity DECIMAL(10,2) DEFAULT 0.00,
+        MODIFY bill_rate DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+        MODIFY pay_rate DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+        MODIFY total_bill DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+        MODIFY total_pay DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+        MODIFY gst_amount DECIMAL(10,2) DEFAULT 0.00,
+        MODIFY extra_hours DECIMAL(10,2) DEFAULT 0.00
+      `);
+      console.log('✅ Tickets table decimals fixed successfully!');
+    } catch (err) {
+      console.error('❌ Failed to fix decimals:', err.message);
+    }
+    
     connection.release();
   })
   .catch(err => {

@@ -213,7 +213,7 @@ const generateInvoicePDF = async (data) => {
         });
         cx += CW[3] + CGP;
 
-        dR(currentPage, parseFloat(ticket.quantity || 0).toFixed(1), cx + CW[4], TXT_Y, 8, font, C_DARK); cx += CW[4] + CGP;
+        dR(currentPage, parseFloat(ticket.quantity || 0).toFixed(2), cx + CW[4], TXT_Y, 8, font, C_DARK); cx += CW[4] + CGP;
         dR(currentPage, `$${parseFloat(ticket.bill_rate || 0).toFixed(2)}`, cx + CW[5], TXT_Y, 8, font, C_DARK); cx += CW[5] + CGP;
         dR(currentPage, `$${amt.toFixed(2)}`, cx + CW[6], TXT_Y, 8, boldFont, C_PRIMARY);
 
@@ -259,6 +259,7 @@ const generateSettlementPDF = async (data) => {
     const {
         driverName,
         userIdCode,
+        driverGstNumber,
         startDate,
         endDate,
         tickets,
@@ -305,8 +306,8 @@ const generateSettlementPDF = async (data) => {
     currentPage.drawText((companyProfile.company_name || 'Noor Trucking Inc.').toUpperCase(), { x: 140, y: HDR_TOP, size: 16, font: boldFont, color: C_PRIMARY });
 
     dR(currentPage, 'SETTLEMENT', COL_R, HDR_TOP, 24, boldFont, C_PRIMARY);
-    // Exact format for Settlement: GST # 818440612RT0001
-    dR(currentPage, 'GST # 818440612RT0001', COL_R, HDR_TOP - 28, 9, boldFont, C_PRIMARY);
+    // Use dynamic GST number for Sub-contractors
+    dR(currentPage, `GST # ${driverGstNumber || 'N/A'}`, COL_R, HDR_TOP - 28, 9, boldFont, C_PRIMARY);
     dR(currentPage, `Period: ${fmtL(startDate)} - ${fmtL(endDate)}`, COL_R, HDR_TOP - 42, 9, font, C_DARK);
 
     const INFO_Y = HDR_TOP - 80;
@@ -349,7 +350,7 @@ const generateSettlementPDF = async (data) => {
         currentPage.drawText(new Date(ticket.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }), { x: cx + 5, y: curY, size: 8, font }); cx += CW[0] + 5;
         currentPage.drawText(String(ticket.ticket_number || '').substring(0, 10), { x: cx + 5, y: curY, size: 8, font }); cx += CW[1] + 5;
         currentPage.drawText(String(ticket.equipment_type || '').substring(0, 30), { x: cx + 5, y: curY, size: 8, font }); cx += CW[2] + 5;
-        dR(currentPage, parseFloat(ticket.pay_quantity || ticket.quantity).toFixed(1), cx + CW[3], curY, 8, font); cx += CW[3] + 5;
+        dR(currentPage, (parseFloat(ticket.pay_quantity) || parseFloat(ticket.quantity) || 0).toFixed(2), cx + CW[3], curY, 8, font); cx += CW[3] + 5;
         dR(currentPage, `$${parseFloat(ticket.pay_rate).toFixed(2)}`, cx + CW[4], curY, 8, font); cx += CW[4] + 5;
         dR(currentPage, `$${amt.toFixed(2)}`, cx + CW[5], curY, 8, boldFont, C_PRIMARY);
         curY -= 18;
