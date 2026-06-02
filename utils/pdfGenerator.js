@@ -350,7 +350,8 @@ const generateSettlementPDF = async (data) => {
         currentPage.drawText(new Date(ticket.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }), { x: cx + 5, y: curY, size: 8, font }); cx += CW[0] + 5;
         currentPage.drawText(String(ticket.ticket_number || '').substring(0, 10), { x: cx + 5, y: curY, size: 8, font }); cx += CW[1] + 5;
         currentPage.drawText(String(ticket.equipment_type || '').substring(0, 30), { x: cx + 5, y: curY, size: 8, font }); cx += CW[2] + 5;
-        dR(currentPage, (parseFloat(ticket.pay_quantity) || parseFloat(ticket.quantity) || 0).toFixed(2), cx + CW[3], curY, 8, font); cx += CW[3] + 5;
+        const qtyToPrint = (parseFloat(ticket.pay_quantity) || parseFloat(ticket.quantity) || 0) + (parseFloat(ticket.extra_hours) || 0);
+        dR(currentPage, qtyToPrint.toFixed(2), cx + CW[3], curY, 8, font); cx += CW[3] + 5;
         dR(currentPage, `$${parseFloat(ticket.pay_rate).toFixed(2)}`, cx + CW[4], curY, 8, font); cx += CW[4] + 5;
         dR(currentPage, `$${amt.toFixed(2)}`, cx + CW[5], curY, 8, boldFont, C_PRIMARY);
         curY -= 18;

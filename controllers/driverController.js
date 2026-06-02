@@ -161,13 +161,26 @@ const createTicket = async (req, res) => {
     const driver = drivers[0];
     const actualDriverId = driver.id;
 
-    const { date, truck_number, customer, equipment_type, ticket_number, quantity } = req.body;
+    const { date, truck_number, customer, equipment_type, ticket_number, quantity, extra_hours } = req.body;
 
     // Validate required fields
     if (!date || !truck_number || !customer || !equipment_type || !ticket_number || !quantity) {
       return res.status(400).json({
         success: false,
         message: 'Date, truck number, customer, equipment type, ticket number, and quantity are required'
+      });
+    }
+
+    // Check duplicate ticket number
+    const [existingTicket] = await pool.execute(
+      'SELECT id FROM tickets WHERE ticket_number = ? AND deleted_at IS NULL',
+      [ticket_number]
+    );
+
+    if (existingTicket.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'This Ticket # already exists'
       });
     }
 
@@ -205,8 +218,9 @@ const createTicket = async (req, res) => {
     const payRate = driver.default_pay_rate || 0;
 
     // Calculate totals
+    const exHrs = parseFloat(extra_hours) || 0;
     const totalBill = parseFloat(quantity) * parseFloat(billRate);
-    const totalPay = parseFloat(quantity) * parseFloat(payRate);
+    const totalPay = (parseFloat(quantity) + exHrs) * parseFloat(payRate);
 
     // Calculate GST for sub-contractors (5%)
     let gstAmount = 0;
@@ -227,10 +241,10 @@ const createTicket = async (req, res) => {
     const [result] = await pool.execute(
       `INSERT INTO tickets 
        (driver_id, customer_id, date, truck_number, customer, equipment_type,
-        ticket_number, quantity, photo_path, bill_rate, pay_rate, total_bill, total_pay, gst_amount, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')`,
+        ticket_number, quantity, extra_hours, photo_path, bill_rate, pay_rate, total_bill, total_pay, gst_amount, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')`,
       [actualDriverId, primaryCustomerId, date, truck_number, customerString,
-        equipment_type, ticket_number, quantity, photoPath,
+        equipment_type, ticket_number, quantity, exHrs, photoPath,
         billRate, payRate, totalBill, totalPay, gstAmount]
     );
 
