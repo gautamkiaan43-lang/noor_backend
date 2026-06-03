@@ -1005,7 +1005,9 @@ const updateTicket = async (req, res) => {
     }
 
     if (total_pay === undefined) {
-      const calculatedPay = (parseFloat(finalPayQty || finalQty) + parseFloat(finalExtraHours || 0)) * finalPayRate;
+      const parsedPayQty = parseFloat(finalPayQty);
+      const pQtyForCalc = !isNaN(parsedPayQty) ? parsedPayQty : parseFloat(finalQty || 0);
+      const calculatedPay = (pQtyForCalc + parseFloat(finalExtraHours || 0)) * finalPayRate;
       updates.push('total_pay = ?');
       values.push(calculatedPay);
 

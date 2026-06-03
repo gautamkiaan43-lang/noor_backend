@@ -397,7 +397,8 @@ const getMyPay = async (req, res) => {
     // Calculate totals
     const totalHours = tickets.reduce((sum, ticket) => sum + parseFloat(ticket.hours || 0), 0);
     const payHours = tickets.reduce((sum, ticket) => {
-      const pQty = (parseFloat(ticket.pay_quantity) || parseFloat(ticket.hours || 0));
+      let pQty = parseFloat(ticket.pay_quantity);
+      if (isNaN(pQty)) pQty = parseFloat(ticket.hours || 0);
       return sum + pQty;
     }, 0);
     const extraHours = tickets.reduce((sum, ticket) => sum + parseFloat(ticket.extra_hours || 0), 0);
@@ -429,7 +430,9 @@ const getMyPay = async (req, res) => {
           status: overallStatus
         },
         tickets: tickets.map(ticket => {
-          const pQty = (parseFloat(ticket.pay_quantity) || parseFloat(ticket.hours || 0));
+          let pQty = parseFloat(ticket.pay_quantity);
+          if (isNaN(pQty)) pQty = parseFloat(ticket.hours || 0);
+          
           return {
             ...ticket,
             hours: parseFloat(ticket.hours),
