@@ -317,9 +317,9 @@ const generateSettlementPDF = async (data) => {
 
     let curY = INFO_Y - 60;
     const drawTblHdr = (pg, y) => {
-        const CW = [70, 60, 160, 45, 55, 65];
+        const CW = [70, 60, 130, 40, 35, 55, 65];
         pg.drawRectangle({ x: ML, y: y - 16, width: COL_R - ML, height: 20, color: C_PRIMARY });
-        const h = ['Date', 'Ticket #', 'Description', 'Qty', 'Rate', 'Total Pay'];
+        const h = ['Date', 'Ticket #', 'Description', 'Qty', 'Extra', 'Rate', 'Total Pay'];
         let cx = ML;
         h.forEach((txt, i) => {
             const isNum = i >= 3;
@@ -339,7 +339,7 @@ const generateSettlementPDF = async (data) => {
     let totalGst = 0;
     tickets.forEach((ticket, idx) => {
         if (curY < 80) { currentPage = pdfDoc.addPage([PG_W, PG_H]); curY = drawTblHdr(currentPage, PG_H - 50); }
-        const CW = [70, 60, 160, 45, 55, 65];
+        const CW = [70, 60, 130, 40, 35, 55, 65];
         const amt = parseFloat(ticket.total_pay || 0);
         const gst = parseFloat(ticket.gst_amount || 0);
         subtotal += amt;
@@ -349,11 +349,14 @@ const generateSettlementPDF = async (data) => {
         let cx = ML;
         currentPage.drawText(new Date(ticket.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }), { x: cx + 5, y: curY, size: 8, font }); cx += CW[0] + 5;
         currentPage.drawText(String(ticket.ticket_number || '').substring(0, 10), { x: cx + 5, y: curY, size: 8, font }); cx += CW[1] + 5;
-        currentPage.drawText(String(ticket.equipment_type || '').substring(0, 30), { x: cx + 5, y: curY, size: 8, font }); cx += CW[2] + 5;
-        const qtyToPrint = (parseFloat(ticket.pay_quantity) || parseFloat(ticket.quantity) || 0) + (parseFloat(ticket.extra_hours) || 0);
-        dR(currentPage, qtyToPrint.toFixed(2), cx + CW[3], curY, 8, font); cx += CW[3] + 5;
-        dR(currentPage, `$${parseFloat(ticket.pay_rate).toFixed(2)}`, cx + CW[4], curY, 8, font); cx += CW[4] + 5;
-        dR(currentPage, `$${amt.toFixed(2)}`, cx + CW[5], curY, 8, boldFont, C_PRIMARY);
+        currentPage.drawText(String(ticket.equipment_type || '').substring(0, 25), { x: cx + 5, y: curY, size: 8, font }); cx += CW[2] + 5;
+        const parsedPayQty = parseFloat(ticket.pay_quantity);
+        const baseQty = !isNaN(parsedPayQty) ? parsedPayQty : (parseFloat(ticket.quantity) || 0);
+        dR(currentPage, baseQty.toFixed(2), cx + CW[3], curY, 8, font); cx += CW[3] + 5;
+        const exHrs = parseFloat(ticket.extra_hours) || 0;
+        dR(currentPage, exHrs > 0 ? `+${exHrs.toFixed(2)}` : '-', cx + CW[4], curY, 8, font); cx += CW[4] + 5;
+        dR(currentPage, `$${parseFloat(ticket.pay_rate).toFixed(2)}`, cx + CW[5], curY, 8, font); cx += CW[5] + 5;
+        dR(currentPage, `$${amt.toFixed(2)}`, cx + CW[6], curY, 8, boldFont, C_PRIMARY);
         curY -= 18;
     });
 
