@@ -351,7 +351,7 @@ const generateSettlementPDF = async (data) => {
         currentPage.drawText(String(ticket.ticket_number || '').substring(0, 10), { x: cx + 5, y: curY, size: 8, font }); cx += CW[1] + 5;
         currentPage.drawText(String(ticket.equipment_type || '').substring(0, 25), { x: cx + 5, y: curY, size: 8, font }); cx += CW[2] + 5;
         const parsedPayQty = parseFloat(ticket.pay_quantity);
-        const baseQty = !isNaN(parsedPayQty) ? parsedPayQty : (parseFloat(ticket.quantity) || 0);
+        const baseQty = (parsedPayQty > 0) ? parsedPayQty : (parseFloat(ticket.quantity) || 0);
         dR(currentPage, baseQty.toFixed(2), cx + CW[3], curY, 8, font); cx += CW[3] + 5;
         const exHrs = parseFloat(ticket.extra_hours) || 0;
         dR(currentPage, exHrs > 0 ? `+${exHrs.toFixed(2)}` : '-', cx + CW[4], curY, 8, font); cx += CW[4] + 5;
