@@ -42,7 +42,7 @@ const getDashboard = async (req, res) => {
     // Get weekly hours and pay
     const [weeklyStats] = await pool.execute(
       `SELECT 
-        COALESCE(SUM(COALESCE(t.pay_quantity, t.quantity) + t.extra_hours), 0) as total_hours,
+        COALESCE(SUM(IF(t.pay_quantity > 0, t.pay_quantity, t.quantity) + t.extra_hours), 0) as total_hours,
         COALESCE(SUM(t.total_pay + (CASE WHEN d.pay_mode = 'Sub-contractor' AND t.gst_amount = 0 THEN t.total_pay * 0.05 ELSE t.gst_amount END)), 0) as estimated_pay
        FROM tickets t
        JOIN drivers d ON t.driver_id = d.id
@@ -55,7 +55,7 @@ const getDashboard = async (req, res) => {
     // Get recent tickets (last 5)
     const [recentTickets] = await pool.execute(
       `SELECT 
-        id, date, customer, quantity as hours, status, ticket_number
+        id, date, customer, quantity as hours, pay_quantity, extra_hours, status, ticket_number
        FROM tickets
        WHERE driver_id = ?
        ORDER BY date DESC, created_at DESC
